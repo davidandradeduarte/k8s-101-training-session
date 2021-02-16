@@ -1,0 +1,3 @@
+[submodule "k8s-demo"]
+	path = k8s-demo
+	url = git@github.com:davidandradeduarte/k8s-demo.git
