@@ -24,53 +24,54 @@
 ### Why?
 
 - Allow scaling of both software and teams
-  1. Declarative configuration - declare desired state and Kubernetes' job is to ensure it matches
-  1. Self-healing systems - trying to mantain desired states if something changes
+  - Declarative configuration - declare desired state and Kubernetes' job is to ensure it matches
+  - Self-healing systems - trying to mantain desired states if something changes
 - Present abstract infrastructure
-  1. Decoupling container images and machines
-  1. Cluster can be heterogeneous and reduce overhead and cost
+  - Decoupling container images and machines
+  - Cluster can be heterogeneous and reduce overhead and cost
 - Gain efficiency
-  1. Optimized usage of physical machines - multiple containers on same machine
-  1. Isolated with namespaces, to not interfere with each other
+  - Optimized usage of physical machines - multiple containers on same machine
+  - Isolated with namespaces, to not interfere with each other
 
 ## Architecture
 
 - Control Plane
-  1. etcd - consitent and highly-available key value store used as backing store for all cluster data
-  1. kupe-apiserver - exposes the k8s API. It is the front-end for the Kubernetes control plane
-  1. kube-controller-mananager - runs controllers processes
-  1. kube-schedule - watches newly created pods that have no node assigned and selects a node for them to run on
+  - `etcd` - consitent and highly-available key value store used as backing store for all cluster data
+  - `kupe-apiserver` - exposes the k8s API. It is the front-end for the Kubernetes control plane
+  - `kube-controller-mananager` - runs controllers processes
+  - `kube-schedule` - watches newly created pods that have no node assigned and selects a node for them to run on
 
 - Nodes
-  1. kubelet - agent which makes sure that containers are running in a pod
-  2. kube-proxy - network proxy - implementing part of the Service concept
-  3. container runtime - software that is responsible for running containers
+  - `kubelet` - agent which makes sure that containers are running in a pod
+  - `kube-proxy` - network proxy - implementing part of the Service concept
+  - `container runtime` - software that is responsible for running containers
 
 ## Resources and custom resources (CRDs)
 
 - Workloads
-   1. Pod (po) - The basic deployable unit containing one or more processes in co-located containers
-   1. ReplicaSet (rs) - Keeps on or more pod replicas running
-   1. Job - Runs pods that perform a completable task
-   1. CronJob - Runs a scheduled job once or periodically
-   1. DaemonSet (ds) - Runs one pod replica per node (on all nodes or only on those matching a node selector)
-   1. StatefulSet (sts) - Runs stateful pods with a stable identity
-   1. Deployment (deploy) - Declarative deployment and updates of pods
+  - `Pod (po)` - The basic deployable unit containing one or more processes in co-located containers
+  - `ReplicaSet (rs)` - Keeps on or more pod replicas running
+  - `Job` - Runs pods that perform a completable task
+  - `CronJob` - Runs a scheduled job once or periodically
+  - `DaemonSet (ds)` - Runs one pod replica per node (on all nodes or only on those matching a node selector)
+  - `StatefulSet (sts)` - Runs stateful pods with a stable identity
+  - `Deployment (deploy)` - Declarative deployment and updates of pods
 - Services
-  1. Service (svc) - Exposes one or more pods at a single and stable IP address and port pair
-  1. Endpoints (ep) - Defines which pods (or other servers) are exposed through a service
-  1. Ingress (ing) - Exposes one or more services to external clients through a single externally reachable IP address
+  - `Service (svc)` - Exposes one or more pods at a single and stable IP address and port pair
+  - `Endpoints (ep)` - Defines which pods (or other servers) are exposed through a service
+  - `Ingress (ing)` - Exposes one or more services to external clients through a single externally reachable IP address
 - Config
-  1. ConfigMap (cm) - A key-value map for storing non-sensitive config options for apps and exposing it to them
-  1. Secret - Like a ConfigMap, but for sensitive data
+  - `ConfigMap (cm)` - A key-value map for storing non-sensitive config options for apps and exposing it to them
+  - `Secret` - Like a ConfigMap, but for sensitive data
 - Storage
-  1. PersistentVolume* (pv) - Points to persistent storage that can be mounted into a pod through a PersistentVolumeClaim
-  1. PersistentVolumeClaim (pvc) - A request for and claim to a PersistentVolume
-  1. StorageClass* (sc) - Defines the type of dynamically-provisioned storage claimable in a PersistentVolumeClaim
+  - `PersistentVolume* (pv)` - Points to persistent storage that can be mounted into a pod through a PersistentVolumeClaim
+  - `PersistentVolumeClaim (pvc)` - A request for and claim to a PersistentVolume
+  - `StorageClass* (sc)` - Defines the type of dynamically-provisioned storage claimable in a PersistentVolumeClaim
 
 _* cluster-level resource (nor namespaced)_
 
 ### Pod
+
 Pod is the smallest deployable unit of computing, not a container
 
 Each container runs in its own cgroup (CPU+RAM allocation), but they share some namespaces and filesystems, such as:
@@ -86,13 +87,13 @@ Each container runs in its own cgroup (CPU+RAM allocation), but they share some 
 
 ### Pod health checks
 
-- startupProbe - indicates wether the application within the Container is started. All other probes are disabled if a startup probe is provided, until it succeeds
-- liveness prob - application specific, determines if application does what the probe knows it should do
-- readiness probe - on start, it might take a while until the application fully loads and can process requests as expected
+- `startupProbe` - indicates wether the application within the Container is started. All other probes are disabled if a startup probe is provided, until it succeeds
+- `liveness prob` - application specific, determines if application does what the probe knows it should do
+- `readiness probe` - on start, it might take a while until the application fully loads and can process requests as expected
   
 ### Pod affinity and anti-affinity
 
-nodeSelector provides a very simple way to constrain pods to nodes with labels and the affinity/anti-affinity feature, greatly expands the types of constraints you can express.
+`nodeSelector` provides a very simple way to constrain pods to nodes with labels and the affinity/anti-affinity feature, greatly expands the types of constraints you can express.
 
 ### Deployment
 
@@ -109,22 +110,21 @@ A DaemonSet ensures that all (or some) Nodes run a copy of a Pod. As nodes are a
 
 ### Service discovery
 
+- find which processes are listening at which addresses for which services
+- do it quickly and reliably, with low-latency, storing richer definitions of what those services are
+- public DNS isn't dynamic enough to deal with the amount of updates
+
 #### Communication challenges
 
 - between pods - using hardcoded IPs would be the wrong way to do it, as pods might be rescheduled on different nodes and change IPs
 - from outside - keep track of all pods that provide a certain service and load balance between them
-
-#### Service discovery
-
-- find which processes are listening at which addresses for which services
-- do it quickly and reliably, with low-latency, storing richer definitions of what those services are
-- public DNS isn't dynamic enough to deal with the amount of updates
 
 ### Service
 
 Service is an abstraction which defines a logical set of Pods (selected using label selector), that provide the same functionality (same microservice)
 
 Different types, for different types of exposure provided by the service:
+
 - ClusterIP
 - NodePorts
 - LoadBalancer
@@ -162,6 +162,7 @@ Manages the deployment and scaling of a set of Pods and provides guarantees abou
 Like a Deployment, a StatefulSet manages Pods that are based on an identical container spec. Unlike a Deployment, a StatefulSet maintains a sticky identity for each of their Pods. These pods are created from the same spec but are not interchangeable: each has a persistent identifier that it mantains across any rescheduling.
 
 StatefulSets are valuable for applications that require one or more of the following:
+
 - Stable, unique network identifiers
 - Stable, persistent storage
 - Ordered, graceful deployment and scaling
@@ -177,8 +178,8 @@ For the Ingress resource to work, the cluster must have an ingress controller ru
 
 - Code Independent
 - Intelligent Routing and Load-Balancing
-  1. Canary Releases
-  1. Dark Launches
+  - Canary Releases
+  - Dark Launches
 - Distributed Tracing
 - Circuit Breakers
 - Fine gained Access Control
@@ -249,4 +250,4 @@ GitOps is a way to do Kubernetes cluster management and application delivery. It
 
 ### Kubernetes Hands-On Training Session
 
-[Demo](k8s-demo/README.md)
+[Demo](https://github.com/davidandradeduarte/k8s-demo)
